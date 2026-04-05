@@ -38,39 +38,65 @@
     </div>
 
     <script>
-        // 這就是您剛剛取得的黃金鑰匙 (API 網址)
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec';
 
-        // 抓取資料的主程式
         async function fetchHealthCheckData() {
             const container = document.getElementById('card-container');
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
                 
-                // 清空載入中文字
                 container.innerHTML = '';
 
-                // 如果試算表沒資料
                 if(data.length === 0) {
                     container.innerHTML = '<div style="text-align:center; padding:30px; color:#209362; font-weight:bold;">太棒了！目前沒有待辦的健檢排程 🎉</div>';
                     return;
                 }
 
-                // 把資料一筆一筆做成卡片
                 data.forEach(item => {
-                    // 如果狀態已經寫已完成，就不顯示這張卡片
                     if(item['狀態 (未完成/已完成)'] === '已完成') return;
 
                     const address = item['接送地址'] || '';
+                    // 修正為官方標準的 Google Maps 導航網址
                     const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+                    
+                    // 為了畫面美觀，將日期時間的 T 和 Z 格式稍微過濾一下 (例如 2026-04-05T07:00:00.000Z)
+                    let rawTime = item['接送日及時間'] || '-';
+                    if(rawTime.includes('T')) {
+                        rawTime = rawTime.substring(0, 16).replace('T', ' ');
+                    }
 
                     const cardHTML = `
                         <div class="card">
                             <h3>👤 ${item['移工姓名'] || '未填寫姓名'}</h3>
                             <div class="info-row"><div class="label">公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
                             <div class="info-row"><div class="label">雇主</div><div class="value">${item['雇主'] || '-'}</div></div>
-                            <div class="info-row"><div class="label">接送時間</div><div class="value" style="color:#e74c3c; font-weight:bold;">${item['接送日及時間'] || '-'}</div></div>
+                            <div class="info-row"><div class="label">接送時間</div><div class="value" style="color:#e74c3c; font-weight:bold;">${rawTime}</div></div>
                             <div class="info-row"><div class="label">接送地址</div><div class="value">${address || '-'}</div></div>
                             <div class="info-row"><div class="label">工人手機</div><div class="value"><a href="tel:${item['工人手機'] || ''}" class="phone-link">${item['工人手機'] || '-'}</a></div></div>
-                            <div class="info-row"><div class="label">雇主手機</div><div class="value"><a href="tel:${item['雇主手機'] || ''}" class="phone-link
+                            <div class="info-row"><div class="label">雇主手機</div><div class="value"><a href="tel:${item['雇主手機'] || ''}" class="phone-link">${item['雇主手機'] || '-'}</a></div></div>
+                            <div class="info-row"><div class="label">體檢醫院</div><div class="value">${item['體檢類別 / 醫院'] || '-'}</div></div>
+                            
+                            <div class="btn-group">
+                                <button class="btn btn-map" onclick="window.open('${mapUrl}')">📍 導航地址</button>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += cardHTML;
+                });
+
+            } catch (error) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:red;">連線失敗，請重新整理網頁試試看。</div>';
+                console.error(error);
+            }
+        }
+
+        // 移除等待條件，一開啟網頁直接呼叫後台！
+        fetchHealthCheckData();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
+</body>
+</html>
