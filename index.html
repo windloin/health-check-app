@@ -9,79 +9,131 @@
     <meta name="theme-color" content="#209362">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
-        .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; }
+        
+        /* 標題列優化：加入重新整理按鈕 */
+        .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .refresh-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 12px; border-radius: 5px; font-size: 14px; cursor: pointer; }
+        
         .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #000; position: sticky; top: 52px; z-index: 99; border-bottom: 2px solid #fbc02d; }
         .container { padding: 12px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #209362; margin: 15px 0 10px 5px; display: flex; align-items: center; }
+        
+        /* 卡片樣式 */
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
-        .card h3 { margin: 0 0 10px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .info-row { display: flex; margin-bottom: 6px; font-size: 14px; }
+        .card h3 { margin: 0 0 12px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .info-row { display: flex; margin-bottom: 8px; font-size: 14px; }
         .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
+        .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
+        
+        /* 輸入與按鈕 */
         .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; background: #fff; }
         .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: 15px; }
         .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .btn-sub { padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-line { background-color: #06C755; color: white; }
         .btn-map { background-color: #f1f3f4; color: #333; }
+
+        /* 已完成清單樣式 */
+        .done-card { background: #e9ecef; border-radius: 8px; padding: 10px; margin-bottom: 10px; border-left: 5px solid #6c757d; display: flex; justify-content: space-between; align-items: center; }
+        .done-info { font-size: 14px; color: #495057; }
+        .done-date { font-size: 12px; color: #868e96; }
+
         #loading { text-align: center; padding: 30px; font-weight: bold; color: #7f8c8d; }
     </style>
 </head>
 <body>
-    <div class="header">🏥 健檢行動協調中心</div>
+    <div class="header">
+        <span>🏥 健檢行動協調中心</span>
+        <button class="refresh-btn" onclick="fetchData()">🔄 更新</button>
+    </div>
     <div class="alert-box">🚨 必帶居留證正本 + 健保卡</div>
-    <div class="container"><div id="card-container"><div id="loading">連線中... ⏳</div></div></div>
+
+    <div class="container">
+        <div class="section-title">📅 待辦健檢排程</div>
+        <div id="active-list"><div id="loading">讀取中...</div></div>
+
+        <div class="section-title" style="margin-top:40px; color:#6c757d;">✅ 近期已完成回報</div>
+        <div id="completed-list"></div>
+    </div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec';
 
         async function fetchData() {
             try {
+                const activeContainer = document.getElementById('active-list');
+                const completedContainer = document.getElementById('completed-list');
+                activeContainer.innerHTML = '<div id="loading">連線資料庫中... ⏳</div>';
+                
                 const res = await fetch(API_URL);
                 const data = await res.json();
-                const container = document.getElementById('card-container');
-                container.innerHTML = '';
+                
+                activeContainer.innerHTML = '';
+                completedContainer.innerHTML = '';
+
+                let activeCount = 0;
 
                 data.forEach(item => {
-                    if(item['狀態 (未完成/已完成)'] === '已完成') return;
+                    const name = item['移工姓名'];
+                    const time = item['接送日及時間'];
+                    const doneTimeInfo = item['備註(找不到人)'] || ''; // 這裡存有 "手機更新於..."
 
-                    const lineMsg = encodeURIComponent(
-                        `【健檢通知】\n移工：${item['移工姓名']}\n雇主：${item['雇主']}\n時間：${item['接送日及時間']}\n地址：${item['接送地址']}\n請移工提前十分鐘帶手機、證件(護照和居留證正本)+健保卡至指定地點等待。`
-                    );
+                    if(item['狀態 (未完成/已完成)'] === '已完成') {
+                        // 渲染到「已完成」區塊
+                        const doneItem = document.createElement('div');
+                        doneItem.className = 'done-card';
+                        doneItem.innerHTML = `
+                            <div class="done-info">✅ <b>${name}</b></div>
+                            <div class="done-date">${doneTimeInfo.replace('手機更新於 ','')}</div>
+                        `;
+                        completedContainer.appendChild(doneItem);
+                    } else {
+                        // 渲染到「待辦」區塊 (顯示所有手機號碼)
+                        activeCount++;
+                        const lineMsg = encodeURIComponent(`【健檢通知】\n移工：${name}\n工人手機：${item['工人手機']}\n雇主：${item['雇主']}\n雇主手機：${item['雇主手機']}\n時間：${time}\n地址：${item['接送地址']}\n請帶居留證+健保卡。`);
 
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <h3>👤 ${item['移工姓名']}</h3>
-                        <div class="info-row"><div class="label">🏢 公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
-                        <div class="info-row"><div class="label">👤 雇主名稱</div><div class="value">${item['雇主'] || '-'}</div></div>
-                        <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:red; font-weight:bold;">${item['接送日及時間']}</div></div>
-                        <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址']}</div></div>
-                        
-                        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                        
-                        <div style="font-size:13px; color:#7f8c8d; font-weight:bold;">✍️ 現場回報區：</div>
-                        <input type="text" class="input-field" id="rep-${item['移工姓名']}" placeholder="您的姓名 (例：小王)">
-                        
-                        <select class="input-field" id="sel-${item['移工姓名']}">
-                            <option value="">-- 更新目前進度 --</option>
-                            <option value="1.已通知(翻譯/業務)" ${item['目前狀態']=='1.已通知(翻譯/業務)'?'selected':''}>1.已通知(翻譯/業務)</option>
-                            <option value="2.已聯絡司機" ${item['目前狀態']=='2.已聯絡司機'?'selected':''}>2.已聯絡司機</option>
-                            <option value="3.已上車" ${item['目前狀態']=='3.已上車'?'selected':''}>3.已上車</option>
-                            <option value="4.體檢中" ${item['目前狀態']=='4.體檢中'?'selected':''}>4.體檢中</option>
-                            <option value="5.已完成" ${item['目前狀態']=='5.已完成'?'selected':''}>5.已完成</option>
-                        </select>
-                        
-                        <input type="text" class="input-field" id="rem-${item['移工姓名']}" placeholder="備註狀況 (例：移工還在準備)" value="${item['備註(找不到人)'] || ''}">
-                        
-                        <button class="btn-report" onclick="doUpdate('${item['移工姓名']}')">同步更新至 Excel</button>
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <h3>👤 ${name}</h3>
+                            <div class="info-row"><div class="label">🏢 公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
+                            <div class="info-row"><div class="label">👤 雇主名稱</div><div class="value">${item['雇主'] || '-'}</div></div>
+                            <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:red; font-weight:bold;">${time}</div></div>
+                            <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址']}</div></div>
+                            
+                            <hr style="border:0; border-top:1px solid #f1f3f4; margin:10px 0;">
+                            
+                            <div class="info-row"><div class="label">📱 工人手機</div><div class="value"><a href="tel:${item['工人手機']}" class="phone-link">${item['工人手機'] || '未填'}</a></div></div>
+                            <div class="info-row"><div class="label">💼 雇主手機</div><div class="value"><a href="tel:${item['雇主手機']}" class="phone-link">${item['雇主手機'] || '未填'}</a></div></div>
+                            <div class="info-row"><div class="label">🚛 司機電話</div><div class="value"><a href="tel:${item['司機姓名/電話']}" class="phone-link">${item['司機姓名/電話'] || '未指派'}</a></div></div>
+                            
+                            <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-top:10px;">
+                                <div style="font-size:12px; color:#7f8c8d; font-weight:bold; margin-bottom:5px;">✍️ 現場進度回報：</div>
+                                <input type="text" class="input-field" id="rep-${name}" placeholder="回報人姓名">
+                                <select class="input-field" id="sel-${name}">
+                                    <option value="">-- 更新狀態 --</option>
+                                    <option value="1.已通知(翻譯/業務)" ${item['目前狀態']=='1.已通知(翻譯/業務)'?'selected':''}>1.已通知(翻譯/業務)</option>
+                                    <option value="2.已聯絡司機" ${item['目前狀態']=='2.已聯絡司機'?'selected':''}>2.已聯絡司機</option>
+                                    <option value="3.已上車" ${item['目前狀態']=='3.已上車'?'selected':''}>3.已上車</option>
+                                    <option value="4.體檢中" ${item['目前狀態']=='4.體檢中'?'selected':''}>4.體檢中</option>
+                                    <option value="5.已完成" ${item['目前狀態']=='5.已完成'?'selected':''}>5.已完成</option>
+                                </select>
+                                <input type="text" class="input-field" id="rem-${name}" placeholder="備註狀況" value="${item['備註(找不到人)'] || ''}">
+                                <button class="btn-report" onclick="doUpdate('${name}')">確認送出更新</button>
+                            </div>
 
-                        <div class="btn-group-sub">
-                            <a href="https://line.me/R/share?text=${lineMsg}" class="btn-sub btn-line">💬 LINE 通知</a>
-                            <button class="btn-sub btn-map" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent('${item['接送地址']}'))">🗺️ 導航</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                            <div class="btn-group-sub">
+                                <a href="https://line.me/R/share?text=${lineMsg}" class="btn-sub btn-line">💬 LINE 通知</a>
+                                <button class="btn-sub btn-map" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent('${item['接送地址']}'))">🗺️ 導航</button>
+                            </div>
+                        `;
+                        activeContainer.appendChild(card);
+                    }
                 });
+                
+                if(activeCount === 0) activeContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#209362;">目前沒有待辦健檢任務 🎉</div>';
+
             } catch (e) { console.error(e); }
         }
 
@@ -89,19 +141,18 @@
             const reporter = document.getElementById(`rep-${name}`).value;
             const status = document.getElementById(`sel-${name}`).value;
             const remarks = document.getElementById(`rem-${name}`).value;
-            
-            if(!reporter) return alert('請填寫姓名以利追蹤！');
-            if(!confirm(`確定要更新「${name}」的資料嗎？`)) return;
+            if(!reporter) return alert('請填寫回報人姓名！');
+            if(!confirm(`確定要更新 ${name} 的狀態嗎？`)) return;
 
-            document.getElementById('card-container').innerHTML = '<div id="loading">正在同步 Excel... 🚀</div>';
+            document.getElementById('active-list').innerHTML = '<div id="loading">同步 Excel 中... 🚀</div>';
             try {
                 await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify({ name: name, status: status, remarks: remarks, reporter: reporter })
                 });
-                alert('更新成功！');
-                setTimeout(fetchData, 1000);
+                alert('回報成功！');
+                fetchData();
             } catch (e) { alert('更新失敗！'); fetchData(); }
         }
         fetchData();
