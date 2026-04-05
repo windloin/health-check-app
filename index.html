@@ -30,7 +30,7 @@
         .btn-line { background-color: #06C755; color: white; }
         .btn-map { background-color: #f1f3f4; color: #333; }
         .done-card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #6c757d; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .done-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        .done-header { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
         .done-time { font-size: 12px; color: #888; }
         #calendar-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 85%; max-width: 350px; border-radius: 15px; padding: 20px; }
@@ -64,17 +64,23 @@
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec';
         let allData = [];
+        let lastFilterDate = null;
 
         async function fetchData() {
             try {
                 document.getElementById('active-list').innerHTML = '<div id="loading">連線資料庫中... ⏳</div>';
-                const res = await fetch(API_URL);
+                // 加入時間戳記避免讀取舊緩存
+                const res = await fetch(`${API_URL}?t=${new Date().getTime()}`);
                 allData = await res.json();
-                filterToday();
-            } catch (e) { alert('連線失敗'); }
+                
+                // 如果原本有篩選日期，更新後維持在該日期，否則顯示今日
+                if(lastFilterDate) renderUI(lastFilterDate);
+                else filterToday();
+            } catch (e) { alert('連線失敗，請檢查網路'); }
         }
 
         function renderUI(filterDate = null) {
+            lastFilterDate = filterDate;
             const activeList = document.getElementById('active-list');
             const completedList = document.getElementById('completed-list');
             const tag = document.getElementById('current-tag');
@@ -91,23 +97,13 @@
                 if (item['狀態 (未完成/已完成)'] === '已完成') {
                     const div = document.createElement('div');
                     div.className = 'done-card';
-                    div.innerHTML = `<div class="done-header"><span>✅ ${name}</span></div><div class="done-time">${doneInfo.replace('回報更新於 ','').replace('手機更新於 ','')}</div>`;
+                    div.innerHTML = `<div class="done-header"><span>✅ ${name}</span></div><div class="done-time">${doneInfo}</div>`;
                     completedList.appendChild(div);
                 } else {
                     if (filterDate && !time.includes(filterDate)) return;
                     
-                    // LINE 訊息最終優化版
                     const lineMsg = encodeURIComponent(
-                        `【健檢通知】\n` +
-                        `移工：${name}\n` +
-                        `工人手機：${item['工人手機'] || '無'}\n` +
-                        `雇主：${item['雇主']}\n` +
-                        `雇主手機：${item['雇主手機'] || '無'}\n` +
-                        `司機：${item['司機姓名/電話'] || '未指派'}\n` +
-                        `時間：${time}\n` +
-                        `地址：${item['接送地址']}\n\n` +
-                        `🚨 務必帶手機、護照+居留證正本、健保卡\n` +
-                        `請提前 10 分鐘於接送位置等待`
+                        `【健檢通知】\n移工：${name}\n工人手機：${item['工人手機'] || '無'}\n雇主：${item['雇主']}\n雇主手機：${item['雇主手機'] || '無'}\n司機：${item['司機姓名/電話'] || '未指派'}\n時間：${time}\n地址：${item['接送地址']}\n\n🚨 務必帶手機、護照+居留證正本、健保卡\n請提前 10 分鐘於接送位置等待`
                     );
 
                     const card = document.createElement('div');
@@ -163,11 +159,26 @@
             const status = document.getElementById(`sel-${name}`).value;
             const remarks = document.getElementById(`rem-${name}`).value;
             if(!reporter) return alert('請填寫您的姓名！');
-            document.getElementById('active-list').innerHTML = '<div id="loading">同步中...</div>';
+            
+            // 立即顯示載入中
+            document.getElementById('active-list').innerHTML = '<div id="loading">正在更新辦公室 Excel... 🚀</div>';
+            
             try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, status, remarks, reporter }) });
-                alert('回報成功！'); fetchData();
-            } catch (e) { alert('更新失敗'); fetchData(); }
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ name, status, remarks, reporter }) 
+                });
+                
+                // 為了讓 Google Sheet 有時間寫入，稍微延遲 1 秒再重新抓取
+                setTimeout(async () => {
+                    alert('回報成功！'); 
+                    await fetchData();
+                }, 1000);
+            } catch (e) { 
+                alert('更新失敗'); 
+                fetchData(); 
+            }
         }
 
         function openCalendar() {
