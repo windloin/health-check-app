@@ -10,19 +10,22 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
         .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; }
-        .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #000; border-bottom: 2px solid #fbc02d; position: sticky; top: 52px; z-index: 99; }
+        .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #000; position: sticky; top: 52px; z-index: 99; border-bottom: 2px solid #fbc02d; }
         .container { padding: 12px; }
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; background: #e0e0e0; }
         .card h3 { margin: 0 0 12px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .info-row { display: flex; margin-bottom: 8px; font-size: 14px; }
         .label { color: #7f8c8d; min-width: 95px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        
+        /* 選單與回報按鈕樣式 */
+        .status-select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; margin-top: 10px; background-color: #fafafa; }
+        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 8px; font-size: 14px; }
+        
+        .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-sub { padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
         .btn-line { background-color: #06C755; color: white; }
-        .btn-update { background-color: #209362; color: white; }
-        .btn-map { background-color: #f1f3f4; color: #333; grid-column: span 2; }
+        .btn-map { background-color: #f1f3f4; color: #333; }
         #loading { text-align: center; padding: 30px; font-weight: bold; color: #7f8c8d; }
     </style>
 </head>
@@ -44,31 +47,25 @@
                 data.forEach(item => {
                     if(item['狀態 (未完成/已完成)'] === '已完成') return;
 
-                    // 處理時間：去掉 T 和秒數
                     let displayTime = item['接送日及時間'] || '-';
-                    if(displayTime.includes('T')) {
-                        displayTime = displayTime.split('.')[0].replace('T', ' ').substring(0, 16);
-                    }
+                    if(displayTime.includes('T')) displayTime = displayTime.split('.')[0].replace('T', ' ').substring(0, 16);
 
-                    // 製作包含完整資訊的 LINE 分享訊息
+                    // LINE 訊息加強版
                     const lineMsg = encodeURIComponent(
                         `【健檢通知】\n` +
-                        `移工姓名：${item['移工姓名'] || '-'}\n` +
+                        `移工：${item['移工姓名'] || '-'}\n` +
                         `工人手機：${item['工人手機'] || '-'}\n` +
-                        `公司名稱：${item['公司名稱'] || '-'}\n` +
                         `雇主：${item['雇主'] || '-'}\n` +
                         `雇主手機：${item['雇主手機'] || '-'}\n` +
-                        `接送時間：${displayTime}\n` +
-                        `接送地址：${item['接送地址'] || '-'}\n` +
-                        `請協助提醒務必帶居留證+健保卡。`
+                        `公司：${item['公司名稱'] || '-'}\n` +
+                        `時間：${displayTime}\n` +
+                        `地址：${item['接送地址'] || '-'}\n` +
+                        `請帶居留證正本+健保卡。`
                     );
 
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        <div class="status-badge" style="background:${item['目前狀態'] ? '#d4edda' : '#eee'}">
-                            📍 目前狀態：${item['目前狀態'] || '待處理'}
-                        </div>
                         <h3>👤 ${item['移工姓名']}</h3>
                         <div class="info-row"><div class="label">🏢 公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
                         <div class="info-row"><div class="label">👤 雇主名稱</div><div class="value">${item['雇主'] || '-'}</div></div>
@@ -76,11 +73,22 @@
                         <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址'] || '-'}</div></div>
                         <div class="info-row"><div class="label">🚌 司機資訊</div><div class="value">${item['司機姓名/電話'] || '未指派'}</div></div>
                         
-                        <div class="btn-group">
-                            <a href="https://line.me/R/share?text=${lineMsg}" class="btn btn-line">💬 LINE 通知</a>
-                            <button class="btn btn-update" onclick="doUpdate('${item['移工姓名']}', '3.已上車')">🚌 確認上車</button>
-                            <button class="btn btn-update" onclick="doUpdate('${item['移工姓名']}', '已完成')">✅ 體檢完成</button>
-                            <button class="btn btn-map" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(item['接送地址'])}')">🗺️ 導航地址</button>
+                        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+                        
+                        <div style="font-size:13px; color:#7f8c8d; font-weight:bold;">📍 更新進度 (Excel 同步)：</div>
+                        <select class="status-select" id="sel-${item['移工姓名']}">
+                            <option value="">-- 請選擇目前狀態 --</option>
+                            <option value="1.已通知(翻譯/業務)" ${item['目前狀態']=='1.已通知(翻譯/業務)'?'selected':''}>1.已通知(翻譯/業務)</option>
+                            <option value="2.已聯絡司機" ${item['目前狀態']=='2.已聯絡司機'?'selected':''}>2.已聯絡司機</option>
+                            <option value="3.已上車" ${item['目前狀態']=='3.已上車'?'selected':''}>3.已上車</option>
+                            <option value="4.體檢中" ${item['目前狀態']=='4.體檢中'?'selected':''}>4.體檢中</option>
+                            <option value="5.已完成" ${item['目前狀態']=='5.已完成'?'selected':''}>5.已完成</option>
+                        </select>
+                        <button class="btn-report" onclick="doUpdate('${item['移工姓名']}')">送出回報</button>
+
+                        <div class="btn-group-sub">
+                            <a href="https://line.me/R/share?text=${lineMsg}" class="btn-sub btn-line">💬 LINE 通知</a>
+                            <button class="btn-sub btn-map" onclick="window.open('https://maps.google.com/?q=三民區民族一路XX號{encodeURIComponent(item['接送地址'])}')">🗺️ 導航地址</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -88,9 +96,12 @@
             } catch (e) { console.error(e); }
         }
 
-        async function doUpdate(name, status) {
-            if(!confirm(`確定要標記「${name}」為 ${status} 嗎？`)) return;
-            document.getElementById('card-container').innerHTML = '<div id="loading">更新中... 🚀</div>';
+        async function doUpdate(name) {
+            const status = document.getElementById(`sel-${name}`).value;
+            if(!status) { alert('請先選擇一個狀態！'); return; }
+            if(!confirm(`確定要將 ${name} 的進度更新為「${status}」嗎？`)) return;
+
+            document.getElementById('card-container').innerHTML = '<div id="loading">正在更新辦公室 Excel... 🚀</div>';
             try {
                 await fetch(API_URL, {
                     method: 'POST',
@@ -98,11 +109,8 @@
                     body: JSON.stringify({ name: name, status: status })
                 });
                 alert('回報成功！');
-                setTimeout(fetchData, 1000); // 1秒後重整
-            } catch (e) {
-                alert('更新失敗，請檢查網路！');
-                fetchData();
-            }
+                setTimeout(fetchData, 1000);
+            } catch (e) { alert('更新失敗！'); fetchData(); }
         }
         fetchData();
     </script>
