@@ -106,6 +106,14 @@
         </div>
 
     </div>
-
+<script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('小機關啟動成功！'))
+                    .catch(err => console.log('小機關啟動失敗', err));
+            });
+        }
+    </script>
 </body>
 </html>
