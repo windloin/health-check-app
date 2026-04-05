@@ -9,22 +9,14 @@
     <meta name="theme-color" content="#209362">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
-        
-        /* 頂部標題與按鈕 */
         .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; display: flex; justify-content: center; align-items: center; }
         .refresh-icon { position: absolute; left: 15px; font-size: 20px; cursor: pointer; }
-        
         .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 13px; font-weight: bold; text-align: center; color: #000; border-bottom: 2px solid #fbc02d; line-height: 1.5; }
-        
-        /* 快捷切換列 */
         .filter-bar { display: flex; background: white; padding: 10px; gap: 8px; position: sticky; top: 52px; z-index: 98; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .filter-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #209362; background: white; color: #209362; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .filter-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #209362; background: white; color: #209362; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; }
         .filter-btn.active { background: #209362; color: white; }
-        
         .container { padding: 12px; }
         .section-title { font-size: 16px; font-weight: bold; color: #209362; margin: 10px 0 10px 5px; display: flex; justify-content: space-between; align-items: center; }
-
-        /* 卡片與狀態標籤 */
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
         .status-badge { display: inline-block; padding: 3px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; margin-bottom: 10px; background: #e8f5e9; color: #2e7d32; border: 1px solid #c3e6cb; }
         .card h3 { margin: 0 0 10px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
@@ -32,31 +24,23 @@
         .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
         .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
-        
-        /* 回報區輸入框與鎖定樣式 */
         .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; background: #fff; }
         .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: 15px; cursor: pointer; }
         .btn-report:disabled { background-color: #bdc3c7 !important; cursor: not-allowed; opacity: 0.7; }
-        
         .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .btn-sub { padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-line { background-color: #06C755; color: white; }
         .btn-map { background-color: #f1f3f4; color: #333; }
-
-        /* 已完成清單 */
         .done-card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #6c757d; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .done-header { font-weight: bold; font-size: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; }
         .done-time { font-size: 12px; color: #888; }
-
-        /* 日曆彈窗 */
         #calendar-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 85%; max-width: 350px; border-radius: 15px; padding: 20px; position: relative; }
+        .modal-content { background: white; width: 85%; max-width: 350px; border-radius: 15px; padding: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
         .cal-day { padding: 10px 0; border-radius: 50%; font-size: 14px; cursor: pointer; position: relative; }
         .has-event::after { content: ''; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #e74c3c; border-radius: 50%; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: #209362; }
         .close-cal { background: #eee; border: none; width: 100%; padding: 12px; border-radius: 8px; margin-top: 15px; font-weight: bold; }
-
         #loading { text-align: center; padding: 30px; font-weight: bold; color: #7f8c8d; }
         .current-tag { font-size: 12px; background: #e8f5e9; color: #209362; padding: 3px 10px; border-radius: 10px; display: none; }
     </style>
@@ -64,21 +48,17 @@
 <body>
     <div class="header"><span class="refresh-icon" onclick="fetchData()">🔄</span><span>🏥 健檢行動協調中心</span></div>
     <div class="alert-box">🚨 務必帶手機、護照+居留證正本、健保卡<br>請提前 10 分鐘於接送位置等待</div>
-
     <div class="filter-bar">
         <div class="filter-btn active" id="btn-today" onclick="filterToday()">今日任務</div>
         <div class="filter-btn" id="btn-all" onclick="filterAll()">全部任務</div>
         <div class="filter-btn" id="btn-cal" onclick="openCalendar()">📅 選擇日期</div>
     </div>
-
     <div class="container">
         <div class="section-title">📅 排程清單 <span id="current-tag" class="current-tag"></span></div>
         <div id="active-list"><div id="loading">載入資料中...</div></div>
-
         <div class="section-title" style="margin-top:40px; color:#6c757d;">✅ 近期已完成回報</div>
         <div id="completed-list"></div>
     </div>
-
     <div id="calendar-modal"><div class="modal-content"><div class="cal-header"><span id="cal-title"></span></div>
     <div class="calendar-grid" style="font-size:12px; color:#999; margin-bottom:10px;"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
     <div class="calendar-grid" id="cal-days"></div><button class="close-cal" onclick="closeCalendar()">取消</button></div></div>
@@ -90,11 +70,12 @@
 
         async function fetchData() {
             try {
-                document.getElementById('active-list').innerHTML = '<div id="loading">連線最新資料中... ⏳</div>';
+                const activeList = document.getElementById('active-list');
+                activeList.innerHTML = '<div id="loading">連線最新資料中... ⏳</div>';
                 const res = await fetch(`${API_URL}?t=${new Date().getTime()}`);
                 allData = await res.json();
                 renderUI(lastFilter);
-            } catch (e) { alert('載入失敗'); }
+            } catch (e) { alert('載入失敗，請檢查網路'); }
         }
 
         function renderUI(filterDate = null) {
@@ -103,16 +84,11 @@
             const completedList = document.getElementById('completed-list');
             const tag = document.getElementById('current-tag');
             activeList.innerHTML = ''; completedList.innerHTML = '';
-            
-            if(filterDate) { tag.innerText = filterDate; tag.style.display = 'inline-block'; }
-            else { tag.style.display = 'none'; }
+            if(filterDate) { tag.innerText = filterDate; tag.style.display = 'inline-block'; } else { tag.style.display = 'none'; }
 
             allData.forEach(item => {
-                const id = item['ID']; 
-                const name = item['移工姓名'];
-                const time = item['接送日及時間'] || '';
-                const currentStatus = item['目前狀態'] || '待處理';
-                const doneInfo = item['最後回報者'] || '無記錄';
+                const id = item['ID']; const name = item['移工姓名']; const time = item['接送日及時間'] || '';
+                const currentStatus = item['目前狀態'] || '待處理'; const doneInfo = item['最後回報者'] || '無記錄';
 
                 if (item['狀態 (未完成/已完成)'] === '已完成') {
                     const div = document.createElement('div');
@@ -121,9 +97,7 @@
                     completedList.appendChild(div);
                 } else {
                     if (filterDate && !time.includes(filterDate)) return;
-                    
                     const lineMsg = encodeURIComponent(`【健檢通知】\n移工：${name}\n工人：${item['工人手機'] || '無'}\n雇主：${item['雇主']}\n雇主手機：${item['雇主手機'] || '無'}\n司機：${item['司機姓名/電話'] || '未指派'}\n時間：${time}\n地址：${item['接送地址']}\n\n🚨 務必帶手機、護照+居留證正本、健保卡\n請提前 10 分鐘於接送位置等待`);
-
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
@@ -137,11 +111,10 @@
                         <div class="info-row"><div class="label">📱 工人</div><div class="value"><a href="tel:${item['工人手機']}" class="phone-link">${item['工人手機'] || '未填'}</a></div></div>
                         <div class="info-row"><div class="label">💼 雇主</div><div class="value"><a href="tel:${item['雇主手機']}" class="phone-link">${item['雇主手機'] || '未填'}</a></div></div>
                         <div class="info-row"><div class="label">🚛 司機</div><div class="value"><a href="tel:${item['司機姓名/電話']}" class="phone-link">${item['司機姓名/電話'] || '未填'}</a></div></div>
-                        
                         <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-top:10px;">
                             <input type="text" class="input-field" id="rep-${id}" placeholder="回報人姓名 (必填)">
                             <select class="input-field" id="sel-${id}">
-                                <option value="">-- 更新目前進度 --</option>
+                                <option value="">-- 更新進度 --</option>
                                 <option value="1.已通知(翻譯/業務)" ${currentStatus.includes('1')?'selected':''}>1.已通知(翻譯/業務)</option>
                                 <option value="2.已聯絡司機" ${currentStatus.includes('2')?'selected':''}>2.已聯絡司機</option>
                                 <option value="3.已上車" ${currentStatus.includes('3')?'selected':''}>3.已上車</option>
@@ -166,60 +139,38 @@
             const status = document.getElementById(`sel-${id}`).value;
             const remarks = document.getElementById(`rem-${id}`).value;
             const btn = document.getElementById(`btn-${id}`);
-
-            if(!reporter) return alert('請填寫您的姓名！');
-            if(!status) return alert('請選擇更新進度！');
-            if(!confirm(`確定要將 ${name} 更新為「${status}」嗎？`)) return;
-
-            // 鎖定按鈕防止連點
-            btn.disabled = true;
-            btn.innerText = '正在同步中...';
-
+            if(!reporter || !status) return alert('請填寫姓名並選擇狀態！');
+            if(!confirm(`確定更新 ${name} 的進度？`)) return;
+            btn.disabled = true; btn.innerText = '同步中...';
             try {
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ id, name, status, remarks, reporter }) });
-                
-                setTimeout(async () => {
-                    alert('回報成功！'); 
-                    await fetchData();
-                }, 1500);
-            } catch (e) { 
-                alert('更新失敗，請檢查網路'); 
-                btn.disabled = false;
-                btn.innerText = '送出回報';
-            }
+                setTimeout(async () => { alert('回報成功！'); await fetchData(); }, 1200);
+            } catch (e) { alert('更新失敗'); btn.disabled = false; btn.innerText = '送出回報'; }
         }
 
         function filterToday() {
-            const now = new Date();
-            const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+            const now = new Date(); const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
             setActiveBtn('btn-today'); renderUI(today);
         }
         function filterAll() { setActiveBtn('btn-all'); renderUI(null); }
-        function setActiveBtn(id) {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+        function setActiveBtn(id) { document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function openCalendar() {
-            document.getElementById('calendar-modal').style.display = 'flex';
-            const grid = document.getElementById('cal-days');
-            const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
-            document.getElementById('cal-title').innerText = y + "年 " + (m + 1) + "月";
-            grid.innerHTML = '';
-            const firstDay = new Date(y, m, 1).getDay();
-            const lastDate = new Date(y, m + 1, 0).getDate();
+            document.getElementById('calendar-modal').style.display = 'flex'; const grid = document.getElementById('cal-days'); const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
+            document.getElementById('cal-title').innerText = y + "年 " + (m + 1) + "月"; grid.innerHTML = '';
+            const firstDay = new Date(y, m, 1).getDay(); const lastDate = new Date(y, m + 1, 0).getDate();
             const eventDates = allData.filter(i => i['狀態 (未完成/已完成)'] !== '已完成').map(i => i['接送日及時間'].split(' ')[0]);
             for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
             for (let d = 1; d <= lastDate; d++) {
                 const dateStr = y + "-" + String(m+1).padStart(2,'0') + "-" + String(d).padStart(2,'0');
                 const hasEvent = eventDates.some(ed => ed.includes(dateStr));
-                const dayEl = document.createElement('div');
-                dayEl.className = `cal-day ${hasEvent ? 'has-event' : ''}`;
-                dayEl.innerText = d;
+                const dayEl = document.createElement('div'); dayEl.className = `cal-day ${hasEvent ? 'has-event' : ''}`; dayEl.innerText = d;
                 dayEl.onclick = () => { setActiveBtn('btn-cal'); renderUI(dateStr); closeCalendar(); };
                 grid.appendChild(dayEl);
             }
         }
         function closeCalendar() { document.getElementById('calendar-modal').style.display = 'none'; }
+        
+        // 初始啟動
         fetchData();
     </script>
 </body>
