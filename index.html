@@ -7,113 +7,26 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#209362">
-    
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
-            background-color: #f2f7f4;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        /* 頂部導覽列 */
-        .header {
-            background-color: #209362;
-            color: white;
-            padding: 15px 20px;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        /* 內容區域 */
-        .container {
-            padding: 20px;
-        }
-        .section-title {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        /* 健檢卡片設計 */
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-left: 5px solid #209362;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .card.urgent {
-            border-left: 5px solid #e74c3c; /* 緊急狀態變紅色 */
-        }
-        .info h3 {
-            margin: 0 0 5px 0;
-            font-size: 18px;
-        }
-        .info p {
-            margin: 0;
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        /* 完成按鈕 */
-        .btn-done {
-            background-color: #f2f7f4;
-            color: #209362;
-            border: 1px solid #209362;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-done:active {
-            background-color: #209362;
-            color: white;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
+        .header { background-color: #209362; color: white; padding: 15px; font-size: 20px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { padding: 15px; }
+        .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.5; border-left: 5px solid #ffc107; }
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
+        .card h3 { margin: 0 0 10px 0; font-size: 20px; display: flex; justify-content: space-between; }
+        .info-row { display: flex; margin-bottom: 8px; font-size: 15px; align-items: flex-start; }
+        .label { color: #7f8c8d; min-width: 110px; font-weight: bold; } /* 稍微加寬讓「接送日及時間」排得下 */
+        .value { color: #2c3e50; flex: 1; }
+        .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; text-align: center; }
+        .btn-map { background-color: #ecf0f1; color: #2c3e50; }
+        .btn-done { background-color: #209362; color: white; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        🏥 健檢排程系統
-    </div>
-
+    <div class="header">🏥 健檢排程系統</div>
     <div class="container">
-        <div class="section-title">📅 本週待辦健檢 (2)</div>
-
-        <div class="card urgent">
-            <div class="info">
-                <h3>阿米 (Aminah)</h3>
-                <p>🏥 醫院：杏林醫院</p>
-                <p>⏰ 期限：2026/04/10 (即將到期)</p>
-                <p>📋 項目：滿 6 個月定檢</p>
-            </div>
-            <button class="btn-done" onclick="alert('已標記為完成！實際系統這裡會連線更新狀態。')">完成</button>
+        <div class="alert-box">
+            ⚠️ 重要提醒：請務必交代移工帶領「居留證正本」與「健保卡」，否則無法進行體檢。
         </div>
-
-        <div class="card">
-            <div class="info">
-                <h3>阮文泰 (Nguyen)</h3>
-                <p>🏥 醫院：和平醫院</p>
-                <p>⏰ 期限：2026/04/15</p>
-                <p>📋 項目：滿 18 個月定檢</p>
-            </div>
-            <button class="btn-done" onclick="alert('已標記為完成！')">完成</button>
-        </div>
-
-    </div>
-<script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('小機關啟動成功！'))
-                    .catch(err => console.log('小機關啟動失敗', err));
-            });
-        }
-    </script>
-</body>
-</html>
