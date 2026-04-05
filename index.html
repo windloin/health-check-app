@@ -13,17 +13,14 @@
         .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #000; position: sticky; top: 52px; z-index: 99; border-bottom: 2px solid #fbc02d; }
         .container { padding: 12px; }
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
-        .card h3 { margin: 0 0 12px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .card h3 { margin: 0 0 10px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .info-row { display: flex; margin-bottom: 6px; font-size: 14px; }
         .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
-        
-        /* 輸入框樣式 */
-        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; }
+        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; background: #fff; }
         .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: 15px; }
-        
         .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-sub { padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .btn-sub { padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-line { background-color: #06C755; color: white; }
         .btn-map { background-color: #f1f3f4; color: #333; }
         #loading { text-align: center; padding: 30px; font-weight: bold; color: #7f8c8d; }
@@ -48,7 +45,7 @@
                     if(item['狀態 (未完成/已完成)'] === '已完成') return;
 
                     const lineMsg = encodeURIComponent(
-                        `【健檢通知】\n移工：${item['移工姓名']}\n雇主：${item['雇主']}\n時間：${item['接送日及時間']}\n地址：${item['接送地址']}\n請帶證件+健保卡。`
+                        `【健檢通知】\n移工：${item['移工姓名']}\n雇主：${item['雇主']}\n時間：${item['接送日及時間']}\n地址：${item['接送地址']}\n請移工提前十分鐘帶手機、證件(護照和居留證正本)+健保卡至指定地點等待。`
                     );
 
                     const card = document.createElement('div');
@@ -63,7 +60,7 @@
                         <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
                         
                         <div style="font-size:13px; color:#7f8c8d; font-weight:bold;">✍️ 現場回報區：</div>
-                        <input type="text" class="input-field" id="rep-${item['移工姓名']}" placeholder="回報者姓名 (例如：業務小王)">
+                        <input type="text" class="input-field" id="rep-${item['移工姓名']}" placeholder="您的姓名 (例：小王)">
                         
                         <select class="input-field" id="sel-${item['移工姓名']}">
                             <option value="">-- 更新目前進度 --</option>
@@ -74,13 +71,13 @@
                             <option value="5.已完成" ${item['目前狀態']=='5.已完成'?'selected':''}>5.已完成</option>
                         </select>
                         
-                        <input type="text" class="input-field" id="rem-${item['移工姓名']}" placeholder="詳細備註 (例如：司機等候中)" value="${item['備註(找不到人)'] || ''}">
+                        <input type="text" class="input-field" id="rem-${item['移工姓名']}" placeholder="備註狀況 (例：移工還在準備)" value="${item['備註(找不到人)'] || ''}">
                         
                         <button class="btn-report" onclick="doUpdate('${item['移工姓名']}')">同步更新至 Excel</button>
 
                         <div class="btn-group-sub">
                             <a href="https://line.me/R/share?text=${lineMsg}" class="btn-sub btn-line">💬 LINE 通知</a>
-                            <button class="btn-sub btn-map" onclick="window.open('http://googleusercontent.com/maps.google.com/7{encodeURIComponent(item['接送地址'])}')">🗺️ 導航</button>
+                            <button class="btn-sub btn-map" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent('${item['接送地址']}'))">🗺️ 導航</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -93,19 +90,19 @@
             const status = document.getElementById(`sel-${name}`).value;
             const remarks = document.getElementById(`rem-${name}`).value;
             
-            if(!reporter) return alert('請填寫「回報者姓名」，以便辦公室確認是誰更新的！');
+            if(!reporter) return alert('請填寫姓名以利追蹤！');
             if(!confirm(`確定要更新「${name}」的資料嗎？`)) return;
 
-            document.getElementById('card-container').innerHTML = '<div id="loading">正在連線 Excel... 🚀</div>';
+            document.getElementById('card-container').innerHTML = '<div id="loading">正在同步 Excel... 🚀</div>';
             try {
                 await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify({ name: name, status: status, remarks: remarks, reporter: reporter })
                 });
-                alert('回報成功！');
+                alert('更新成功！');
                 setTimeout(fetchData, 1000);
-            } catch (e) { alert('連線失敗！'); fetchData(); }
+            } catch (e) { alert('更新失敗！'); fetchData(); }
         }
         fetchData();
     </script>
