@@ -1,1 +1,15 @@
-
+{
+  "name": "移工健檢排程系統",
+  "short_name": "健檢排程",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2f7f4",
+  "theme_color": "#209362",
+  "icons": [
+    {
+      "src": "healthicon.ico",
+      "sizes": "512x512",
+      "type": "image/x-icon"
+    }
+  ]
+}
