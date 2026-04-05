@@ -14,11 +14,14 @@
         .container { padding: 12px; }
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
         .card h3 { margin: 0 0 12px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .info-row { display: flex; margin-bottom: 8px; font-size: 14px; }
-        .label { color: #7f8c8d; min-width: 95px; font-weight: bold; }
+        .info-row { display: flex; margin-bottom: 6px; font-size: 14px; }
+        .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
-        .status-select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; margin-top: 10px; background-color: #fafafa; }
-        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 8px; font-size: 14px; }
+        
+        /* 輸入框樣式 */
+        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; }
+        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: 15px; }
+        
         .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .btn-sub { padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; }
         .btn-line { background-color: #06C755; color: white; }
@@ -29,7 +32,7 @@
 <body>
     <div class="header">🏥 健檢行動協調中心</div>
     <div class="alert-box">🚨 必帶居留證正本 + 健保卡</div>
-    <div class="container"><div id="card-container"><div id="loading">讀取排程中... ⏳</div></div></div>
+    <div class="container"><div id="card-container"><div id="loading">連線中... ⏳</div></div></div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec';
@@ -44,20 +47,8 @@
                 data.forEach(item => {
                     if(item['狀態 (未完成/已完成)'] === '已完成') return;
 
-                    // 直接使用後台傳來的時間字串
-                    const displayTime = item['接送日及時間'] || '-';
-
-                    // 製作包含【完整手機資訊】的 LINE 分享訊息
                     const lineMsg = encodeURIComponent(
-                        `【健檢通知】\n` +
-                        `移工：${item['移工姓名'] || '-'}\n` +
-                        `工人手機：${item['工人手機'] || '-'}\n` +
-                        `雇主：${item['雇主'] || '-'}\n` +
-                        `雇主手機：${item['雇主手機'] || '-'}\n` +
-                        `公司：${item['公司名稱'] || '-'}\n` +
-                        `時間：${displayTime}\n` +
-                        `地址：${item['接送地址'] || '-'}\n` +
-                        `請交代移工帶居留證正本+健保卡。`
+                        `【健檢通知】\n移工：${item['移工姓名']}\n雇主：${item['雇主']}\n時間：${item['接送日及時間']}\n地址：${item['接送地址']}\n請帶證件+健保卡。`
                     );
 
                     const card = document.createElement('div');
@@ -66,26 +57,30 @@
                         <h3>👤 ${item['移工姓名']}</h3>
                         <div class="info-row"><div class="label">🏢 公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
                         <div class="info-row"><div class="label">👤 雇主名稱</div><div class="value">${item['雇主'] || '-'}</div></div>
-                        <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:red; font-weight:bold;">${displayTime}</div></div>
-                        <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址'] || '-'}</div></div>
-                        <div class="info-row"><div class="label">🚌 司機電話</div><div class="value">${item['司機姓名/電話'] || '未指派'}</div></div>
+                        <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:red; font-weight:bold;">${item['接送日及時間']}</div></div>
+                        <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址']}</div></div>
                         
                         <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
                         
-                        <div style="font-size:13px; color:#7f8c8d; font-weight:bold;">📍 更新進度：</div>
-                        <select class="status-select" id="sel-${item['移工姓名']}">
-                            <option value="">-- 點此選擇狀態 --</option>
+                        <div style="font-size:13px; color:#7f8c8d; font-weight:bold;">✍️ 現場回報區：</div>
+                        <input type="text" class="input-field" id="rep-${item['移工姓名']}" placeholder="回報者姓名 (例如：業務小王)">
+                        
+                        <select class="input-field" id="sel-${item['移工姓名']}">
+                            <option value="">-- 更新目前進度 --</option>
                             <option value="1.已通知(翻譯/業務)" ${item['目前狀態']=='1.已通知(翻譯/業務)'?'selected':''}>1.已通知(翻譯/業務)</option>
                             <option value="2.已聯絡司機" ${item['目前狀態']=='2.已聯絡司機'?'selected':''}>2.已聯絡司機</option>
                             <option value="3.已上車" ${item['目前狀態']=='3.已上車'?'selected':''}>3.已上車</option>
                             <option value="4.體檢中" ${item['目前狀態']=='4.體檢中'?'selected':''}>4.體檢中</option>
                             <option value="5.已完成" ${item['目前狀態']=='5.已完成'?'selected':''}>5.已完成</option>
                         </select>
-                        <button class="btn-report" onclick="doUpdate('${item['移工姓名']}')">送出回報</button>
+                        
+                        <input type="text" class="input-field" id="rem-${item['移工姓名']}" placeholder="詳細備註 (例如：司機等候中)" value="${item['備註(找不到人)'] || ''}">
+                        
+                        <button class="btn-report" onclick="doUpdate('${item['移工姓名']}')">同步更新至 Excel</button>
 
                         <div class="btn-group-sub">
                             <a href="https://line.me/R/share?text=${lineMsg}" class="btn-sub btn-line">💬 LINE 通知</a>
-                            <button class="btn-sub btn-map" onclick="window.open('http://googleusercontent.com/maps.google.com/6{encodeURIComponent(item['接送地址'])}')">🗺️ 導航</button>
+                            <button class="btn-sub btn-map" onclick="window.open('http://googleusercontent.com/maps.google.com/7{encodeURIComponent(item['接送地址'])}')">🗺️ 導航</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -94,20 +89,23 @@
         }
 
         async function doUpdate(name) {
+            const reporter = document.getElementById(`rep-${name}`).value;
             const status = document.getElementById(`sel-${name}`).value;
-            if(!status) return alert('請選擇狀態！');
-            if(!confirm(`更新「${name}」為 ${status}？`)) return;
+            const remarks = document.getElementById(`rem-${name}`).value;
+            
+            if(!reporter) return alert('請填寫「回報者姓名」，以便辦公室確認是誰更新的！');
+            if(!confirm(`確定要更新「${name}」的資料嗎？`)) return;
 
-            document.getElementById('card-container').innerHTML = '<div id="loading">更新 Excel 中... 🚀</div>';
+            document.getElementById('card-container').innerHTML = '<div id="loading">正在連線 Excel... 🚀</div>';
             try {
                 await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify({ name: name, status: status })
+                    body: JSON.stringify({ name: name, status: status, remarks: remarks, reporter: reporter })
                 });
                 alert('回報成功！');
                 setTimeout(fetchData, 1000);
-            } catch (e) { alert('更新失敗！'); fetchData(); }
+            } catch (e) { alert('連線失敗！'); fetchData(); }
         }
         fetchData();
     </script>
