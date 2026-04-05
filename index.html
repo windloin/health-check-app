@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>移工健檢行動協調中心</title>
+    <title>移工健檢協調中心</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#209362">
@@ -11,101 +11,87 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
         .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 12px; }
-        .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: bold; border-left: 5px solid #ffc107; }
-        
-        /* 狀態標籤顏色 */
-        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
-        .status-default { background: #e0e0e0; color: #666; }
-        .status-active { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status-urgent { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 5px solid #209362; }
-        .card h3 { margin: 0 0 10px 0; font-size: 19px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .info-row { display: flex; margin-bottom: 6px; font-size: 14px; align-items: flex-start; }
-        .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
-        .value { color: #2c3e50; flex: 1; }
-        .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
-        
-        .driver-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; margin-top: 10px; }
-        .btn-group { display: flex; gap: 8px; margin-top: 12px; }
-        .btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; }
-        .btn-map { background-color: #ecf0f1; color: #2c3e50; }
-        .btn-call { background-color: #209362; color: white; text-decoration: none; }
-        #loading { text-align: center; padding: 30px; color: #7f8c8d; }
+        .alert-box { background-color: #ffeb3b; position: sticky; top: 52px; z-index: 99; padding: 10px; font-size: 14px; font-weight: bold; text-align: center; color: #000; border-bottom: 2px solid #fbc02d; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; background: #e0e0e0; }
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
+        .card h3 { margin: 0 0 12px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .info-row { display: flex; margin-bottom: 8px; font-size: 14px; }
+        .label { color: #7f8c8d; min-width: 95px; font-weight: bold; }
+        .value { color: #2c3e50; flex: 1; font-weight: 500; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .btn-line { background-color: #06C755; color: white; }
+        .btn-update { background-color: #209362; color: white; }
+        .btn-map { background-color: #f1f3f4; color: #333; grid-column: span 2; }
+        #loading { text-align: center; padding: 30px; font-weight: bold; color: #7f8c8d; }
     </style>
 </head>
 <body>
-    <div class="header">🏥 健檢協調中心</div>
-    <div class="container">
-        <div class="alert-box">
-            📢 提醒移工：必帶居留證正本+健保卡。
-        </div>
+    <div class="header">🏥 健檢行動協調中心</div>
+    <div class="alert-box">🚨 必帶居留證正本 + 健保卡</div>
 
-        <div id="card-container">
-            <div id="loading">讀取最新排程中... ⏳</div>
-        </div>
+    <div class="container">
+        <div id="card-container"><div id="loading">讀取最新排程中... ⏳</div></div>
     </div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec';
 
         async function fetchHealthCheckData() {
-            const container = document.getElementById('card-container');
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
+                const container = document.getElementById('card-container');
                 container.innerHTML = '';
-
-                if(data.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; padding:30px; color:#209362;">目前無待辦任務</div>';
-                    return;
-                }
 
                 data.forEach(item => {
                     if(item['狀態 (未完成/已完成)'] === '已完成') return;
-
-                    // 處理時間格式
-                    let rawTime = item['接送日及時間'] || '-';
-                    if(rawTime.includes('T')) rawTime = rawTime.substring(0, 16).replace('T', ' ');
-
-                    const cardHTML = `
-                        <div class="card">
-                            <div class="status-badge ${item['目前進度'] ? 'status-active' : 'status-default'}">
-                                📍 狀態：${item['目前進度'] || '待通知'}
-                            </div>
-                            <h3>👤 ${item['移工姓名'] || '未知'}</h3>
-                            <div class="info-row"><div class="label">公司/雇主</div><div class="value">${item['公司名稱'] || ''} / ${item['雇主'] || ''}</div></div>
-                            <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:#e74c3c; font-weight:bold;">${rawTime}</div></div>
-                            <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址'] || '-'}</div></div>
-                            <div class="info-row"><div class="label">📱 工人手機</div><div class="value"><a href="tel:${item['工人手機']}" class="phone-link">${item['工人手機']}</a></div></div>
-                            <div class="info-row"><div class="label">💼 雇主手機</div><div class="value"><a href="tel:${item['雇主手機']}" class="phone-link">${item['雇主手機']}</a></div></div>
-                            
-                            <div class="driver-box">
-                                <div class="info-row" style="margin-bottom:0;">
-                                    <div class="label">🚛 司機資訊</div>
-                                    <div class="value">
-                                        ${item['司機姓名/電話'] ? `<a href="tel:${item['司機姓名/電話'].replace(/[^0-9]/g,'')}" class="phone-link">${item['司機姓名/電話']}</a>` : '尚未指派'}
-                                    </div>
-                                </div>
-                            </div>
-
-                            ${item['備註'] ? `<div style="font-size:12px; color:red; margin-top:8px;">📝 備註：${item['備註']}</div>` : ''}
-
-                            <div class="btn-group">
-                                <button class="btn btn-map" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item['接送地址'])}')">🗺️ 地圖導航</button>
-                                ${item['司機姓名/電話'] ? `<a href="tel:${item['司機姓名/電話'].replace(/[^0-9]/g,'')}" class="btn btn-call">📞 聯絡司機</a>` : ''}
-                            </div>
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="status-badge" style="background:${item['目前進度'] ? '#d4edda' : '#eee'}">
+                            📍 目前狀態：${item['目前進度'] || '待處理'}
+                        </div>
+                        <h3>👤 ${item['移工姓名']}</h3>
+                        <div class="info-row"><div class="label">🏢 公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
+                        <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:red">${item['接送日及時間'] || '-'}</div></div>
+                        <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址'] || '-'}</div></div>
+                        <div class="info-row"><div class="label">🚌 司機電話</div><div class="value">${item['司機姓名/電話'] || '未指派'}</div></div>
+                        
+                        <div class="btn-group">
+                            <a href="https://line.me/R/" class="btn btn-line">💬 打開 LINE</a>
+                            <button class="btn btn-update" onclick="updateStatus('${item['移工姓名']}', '3.已上車')">🚌 確認上車</button>
+                            <button class="btn btn-update" onclick="updateStatus('${item['移工姓名']}', '已完成')">✅ 體檢完成</button>
+                            <button class="btn btn-map" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item['接送地址'])}')">🗺️ 導航地址</button>
                         </div>
                     `;
-                    container.innerHTML += cardHTML;
+                    container.appendChild(card);
                 });
-            } catch (error) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:red;">讀取失敗，請重新整理</div>';
+            } catch (e) { console.error(e); }
+        }
+
+        async function updateStatus(name, status) {
+            if(!confirm(`確定要將 ${name} 標記為「${status}」嗎？`)) return;
+            
+            // 顯示載入中
+            document.getElementById('card-container').innerHTML = '<div id="loading">正在回報進度給辦公室... 🚀</div>';
+            
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // 這是解決跨網域問題的小技巧
+                    body: JSON.stringify({ name: name, status: status })
+                });
+                alert('回報成功！Excel 資料已更新。');
+                setTimeout(fetchHealthCheckData, 2000); // 2秒後重新讀取最新資料
+            } catch (e) {
+                alert('更新失敗，請檢查網路！');
+                fetchHealthCheckData();
             }
         }
 
         fetchHealthCheckData();
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
     </script>
 </body>
 </html>
