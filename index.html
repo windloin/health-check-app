@@ -13,15 +13,16 @@
         .container { padding: 15px; }
         .alert-box { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.5; border-left: 5px solid #ffc107; }
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
-        .card h3 { margin: 0 0 10px 0; font-size: 20px; display: flex; justify-content: space-between; }
+        .card h3 { margin: 0 0 10px 0; font-size: 20px; color: #209362; }
         .info-row { display: flex; margin-bottom: 8px; font-size: 15px; align-items: flex-start; }
-        .label { color: #7f8c8d; min-width: 110px; font-weight: bold; } /* 稍微加寬讓「接送日及時間」排得下 */
+        .label { color: #7f8c8d; min-width: 100px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; }
         .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; text-align: center; }
         .btn-map { background-color: #ecf0f1; color: #2c3e50; }
         .btn-done { background-color: #209362; color: white; }
+        #loading { text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -30,3 +31,46 @@
         <div class="alert-box">
             ⚠️ 重要提醒：請務必交代移工帶領「居留證正本」與「健保卡」，否則無法進行體檢。
         </div>
+
+        <div id="card-container">
+            <div id="loading">資料努力連線中，請稍候... ⏳</div>
+        </div>
+    </div>
+
+    <script>
+        // 這就是您剛剛取得的黃金鑰匙 (API 網址)
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec';
+
+        // 抓取資料的主程式
+        async function fetchHealthCheckData() {
+            const container = document.getElementById('card-container');
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                // 清空載入中文字
+                container.innerHTML = '';
+
+                // 如果試算表沒資料
+                if(data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:30px; color:#209362; font-weight:bold;">太棒了！目前沒有待辦的健檢排程 🎉</div>';
+                    return;
+                }
+
+                // 把資料一筆一筆做成卡片
+                data.forEach(item => {
+                    // 如果狀態已經寫已完成，就不顯示這張卡片
+                    if(item['狀態 (未完成/已完成)'] === '已完成') return;
+
+                    const address = item['接送地址'] || '';
+                    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
+                    const cardHTML = `
+                        <div class="card">
+                            <h3>👤 ${item['移工姓名'] || '未填寫姓名'}</h3>
+                            <div class="info-row"><div class="label">公司名稱</div><div class="value">${item['公司名稱'] || '-'}</div></div>
+                            <div class="info-row"><div class="label">雇主</div><div class="value">${item['雇主'] || '-'}</div></div>
+                            <div class="info-row"><div class="label">接送時間</div><div class="value" style="color:#e74c3c; font-weight:bold;">${item['接送日及時間'] || '-'}</div></div>
+                            <div class="info-row"><div class="label">接送地址</div><div class="value">${address || '-'}</div></div>
+                            <div class="info-row"><div class="label">工人手機</div><div class="value"><a href="tel:${item['工人手機'] || ''}" class="phone-link">${item['工人手機'] || '-'}</a></div></div>
+                            <div class="info-row"><div class="label">雇主手機</div><div class="value"><a href="tel:${item['雇主手機'] || ''}" class="phone-link
