@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>移工健檢行動協調中心</title>
+    <title>移工健檢行動中心</title>
     <style>
         body { font-family: -apple-system, sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
         .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; display: flex; justify-content: center; align-items: center; }
@@ -19,8 +19,8 @@
         .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
         .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
-        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; }
-        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; background: #fff; }
+        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-report:disabled { background-color: #bdc3c7; }
         .btn-photo { width: 100%; background-color: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 10px; }
         .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -101,7 +101,7 @@
                             <select class="input-field" id="sel-${id}"><option value="">-- 更新進度 --</option><option value="1.已通知">1.已通知</option><option value="2.已聯絡司機">2.已聯絡司機</option><option value="3.已上車">3.已上車</option><option value="4.體檢中">4.體檢中</option><option value="5.已完成">5.已完成</option></select>
                             <input type="file" id="file-${id}" accept="image/*" capture="camera" style="display:none;" onchange="compressImage('${id}')">
                             <button class="btn-photo" onclick="document.getElementById('file-${id}').click()">📸 拍收據 / 現場照</button>
-                            <div id="pre-${id}" style="display:none; font-size:12px; color:blue; text-align:center; margin-bottom:5px;">✅ 照片已就緒</div>
+                            <div id="pre-${id}" style="display:none; font-size:12px; color:blue; text-align:center; margin-bottom:5px;">✅ 照片縮圖已就緒</div>
                             <input type="text" class="input-field" id="rem-${id}" placeholder="備註狀況">
                             <button class="btn-report" id="btn-${id}" onclick="doUpdate('${id}', '${name}')">確認送出回報</button>
                         </div>
@@ -121,9 +121,11 @@
                 const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                    canvas.width = 800; canvas.height = img.height * (800 / img.width);
+                    const maxWidth = 600; 
+                    const scale = maxWidth / img.width;
+                    canvas.width = maxWidth; canvas.height = img.height * scale;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    photoDataMap[id] = canvas.toDataURL('image/jpeg', 0.8);
+                    photoDataMap[id] = canvas.toDataURL('image/jpeg', 0.6);
                     document.getElementById(`pre-${id}`).style.display = 'block';
                 };
             };
@@ -135,10 +137,22 @@
             const remarks = document.getElementById(`rem-${id}`).value;
             const photoData = photoDataMap[id] || null;
             if(!reporter || !status) return alert('請填姓名與進度！');
-            const btn = document.getElementById(`btn-${id}`); btn.disabled = true; btn.innerText = '同步中...';
+            const btn = document.getElementById(`btn-${id}`); 
+            btn.disabled = true; 
+            btn.innerText = photoData ? '正在傳送照片與資料(較慢)...' : '同步中...';
+            
             try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ id, name, status, remarks, reporter, photoData }) });
-                setTimeout(() => { alert('回報成功！'); photoDataMap[id]=null; fetchData(); }, 1500);
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ id, name, status, remarks, reporter, photoData }) 
+                });
+                const waitTime = photoData ? 4000 : 1500;
+                setTimeout(() => { 
+                    alert(photoData ? '✅ 照片與資料上傳成功！' : '回報成功！'); 
+                    photoDataMap[id] = null; 
+                    fetchData(); 
+                }, waitTime);
             } catch (e) { alert('更新失敗'); btn.disabled = false; }
         }
 
