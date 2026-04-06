@@ -84,7 +84,6 @@
                     completedList.appendChild(div);
                 } else {
                     if (filterDate && !time.includes(filterDate)) return;
-                    
                     const lineMsg = encodeURIComponent(`【健檢通知】\n移工：${name}\n工人手機：${wPhone}\n雇主：${item['雇主']}\n雇主手機：${ePhone}\n司機：${item['司機姓名/電話'] || '未填'}\n時間：${time}\n地址：${item['接送地址']}\n\n🚨 務必帶手機、護照+居留證正本、健保卡\n請提前 10 分鐘於接送位置等待`);
 
                     const card = document.createElement('div');
@@ -121,11 +120,9 @@
                 const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                    const maxWidth = 600; 
-                    const scale = maxWidth / img.width;
-                    canvas.width = maxWidth; canvas.height = img.height * scale;
+                    canvas.width = 500; canvas.height = img.height * (500 / img.width);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    photoDataMap[id] = canvas.toDataURL('image/jpeg', 0.6);
+                    photoDataMap[id] = canvas.toDataURL('image/jpeg', 0.5); // 品質降到 0.5 進一步減重
                     document.getElementById(`pre-${id}`).style.display = 'block';
                 };
             };
@@ -137,23 +134,25 @@
             const remarks = document.getElementById(`rem-${id}`).value;
             const photoData = photoDataMap[id] || null;
             if(!reporter || !status) return alert('請填姓名與進度！');
-            const btn = document.getElementById(`btn-${id}`); 
-            btn.disabled = true; 
-            btn.innerText = photoData ? '正在傳送照片與資料(較慢)...' : '同步中...';
+            const btn = document.getElementById(`btn-${id}`); btn.disabled = true; 
+            btn.innerText = photoData ? '正在傳送照片(請等待)...' : '同步中...';
             
             try {
-                await fetch(API_URL, { 
+                // 發送請求
+                fetch(API_URL, { 
                     method: 'POST', 
                     mode: 'no-cors', 
                     body: JSON.stringify({ id, name, status, remarks, reporter, photoData }) 
                 });
-                const waitTime = photoData ? 4000 : 1500;
+
+                // 因為是 no-cors，我們直接相信大腦會處理好，倒數結束後刷新
+                const waitTime = photoData ? 5000 : 1500;
                 setTimeout(() => { 
-                    alert(photoData ? '✅ 照片與資料上傳成功！' : '回報成功！'); 
+                    alert(photoData ? '✅ 回報與照片已排程更新，請查閱 Excel。' : '回報成功！'); 
                     photoDataMap[id] = null; 
                     fetchData(); 
                 }, waitTime);
-            } catch (e) { alert('更新失敗'); btn.disabled = false; }
+            } catch (e) { alert('連線異常'); btn.disabled = false; }
         }
 
         function filterToday() { document.getElementById('btn-today').classList.add('active'); document.getElementById('btn-all').classList.remove('active'); renderUI(getTodayStr()); }
