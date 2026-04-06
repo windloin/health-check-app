@@ -127,4 +127,116 @@
                 card.innerHTML = `
                     <div class="status-badge">📍 ID：${id} | 狀態：${currentStatus}</div>
                     <h3>👤 ${name}</h3>
-                    <div class="info-row"><div class="label">🏢 公司</div><div class="value">${item['公司名稱']
+                    <div class="info-row"><div class="label">🏢 公司</div><div class="value">${item['公司名稱'] || '-'}</div></div>
+                    <div class="info-row"><div class="label">⏰ 時間</div><div class="value" style="color:red; font-weight:bold;">${time}</div></div>
+                    <div class="info-row"><div class="label">📍 地址</div><div class="value">${item['接送地址']}</div></div>
+                    <hr style="border:0; border-top:1px solid #f1f3f4; margin:10px 0;">
+                    <div class="info-row"><div class="label">📱 工人</div><div class="value"><a href="tel:${item['工人手機']}" class="phone-link">${item['工人手機'] || '未填'}</a></div></div>
+                    <div class="info-row"><div class="label">🚛 司機</div><div class="value"><a href="tel:${item['司機姓名/電話']}" class="phone-link">${item['司機姓名/電話'] || '未填'}</a></div></div>
+                    
+                    <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-top:10px;">
+                        <input type="text" class="input-field" id="rep-${id}" placeholder="您的姓名 (必填)">
+                        <select class="input-field" id="sel-${id}">
+                            <option value="">-- 更新進度 --</option>
+                            <option value="1.已通知" ${currentStatus.includes('1')?'selected':''}>1.已通知</option>
+                            <option value="2.已聯絡司機" ${currentStatus.includes('2')?'selected':''}>2.已聯絡司機</option>
+                            <option value="3.已上車" ${currentStatus.includes('3')?'selected':''}>3.已上車</option>
+                            <option value="4.體檢中" ${currentStatus.includes('4')?'selected':''}>4.體檢中</option>
+                            <option value="5.已完成" ${currentStatus.includes('5')?'selected':''}>5.已完成</option>
+                        </select>
+                        <input type="text" class="input-field" id="rem-${id}" placeholder="備註狀況" value="${item['備註(找不到人)'] || ''}">
+                        <button class="btn-report" id="btn-${id}" onclick="doUpdate('${id}', '${name}')">送出回報</button>
+                    </div>
+                    <div class="btn-group-sub">
+                        <a href="https://line.me/R/share?text=${lineMsg}" class="btn-sub btn-line">💬 LINE 通知</a>
+                        <button class="btn-sub btn-map" onclick="window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('${item['接送地址']}'))">🗺️ 導航</button>
+                    </div>
+                `;
+                activeList.appendChild(card);
+            }
+        });
+    }
+
+    async function doUpdate(id, name) {
+        const reporter = document.getElementById(`rep-${id}`).value;
+        const status = document.getElementById(`sel-${id}`).value;
+        const remarks = document.getElementById(`rem-${id}`).value;
+        const btn = document.getElementById(`btn-${id}`);
+
+        if(!reporter || !status) return alert('請填寫姓名並選擇狀態！');
+        if(!confirm(`確定要更新 ${name} 的進度嗎？`)) return;
+
+        btn.disabled = true; 
+        btn.innerText = '正在同步資料...';
+
+        try {
+            await fetch(API_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ id, name, status, remarks, reporter }) 
+            });
+            setTimeout(async () => { 
+                alert('回報成功！'); 
+                await fetchData(); 
+            }, 1000);
+        } catch (e) { 
+            alert('更新失敗，請檢查網路'); 
+            btn.disabled = false; 
+            btn.innerText = '送出回報'; 
+        }
+    }
+
+    function filterToday() {
+        const n = new Date();
+        const today = n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, '0') + "-" + String(n.getDate()).padStart(2, '0');
+        setActiveBtn('btn-today');
+        renderUI(today);
+    }
+
+    function filterAll() { 
+        setActiveBtn('btn-all'); 
+        renderUI(null); 
+    }
+
+    function setActiveBtn(id) { 
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+    }
+
+    function openCalendar() {
+        document.getElementById('calendar-modal').style.display = 'flex';
+        const grid = document.getElementById('cal-days');
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth();
+        document.getElementById('cal-title').innerText = `${y}年 ${m + 1}月`;
+        grid.innerHTML = '';
+
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m + 1, 0).getDate();
+        const eventDates = allData.filter(i => i['狀態 (未完成/已完成)'] !== '已完成').map(i => i['接送日及時間'] ? i['接送日及時間'].split(' ')[0] : '');
+
+        for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+        for (let d = 1; d <= lastDate; d++) {
+            const dateStr = y + "-" + String(m+1).padStart(2,'0') + "-" + String(d).padStart(2,'0');
+            const hasEvent = eventDates.some(ed => ed.includes(dateStr));
+            const dayEl = document.createElement('div');
+            dayEl.className = `cal-day ${hasEvent ? 'has-event' : ''}`;
+            dayEl.innerText = d;
+            dayEl.onclick = () => { 
+                setActiveBtn('btn-cal'); 
+                renderUI(dateStr); 
+                closeCalendar(); 
+            };
+            grid.appendChild(dayEl);
+        }
+    }
+
+    function closeCalendar() { 
+        document.getElementById('calendar-modal').style.display = 'none'; 
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
