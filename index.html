@@ -3,161 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>移工健檢行動協調中心</title>
+    <title>移工健檢行動中心</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#209362">
     <style>
-        body { font-family: -apple-system, sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background-color: #f2f7f4; margin: 0; padding: 0; color: #333; }
         .header { background-color: #209362; color: white; padding: 15px; font-size: 18px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; display: flex; justify-content: center; align-items: center; }
-        .refresh-icon { position: absolute; left: 15px; cursor: pointer; }
-        .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 13px; font-weight: bold; text-align: center; line-height: 1.5; }
+        .refresh-icon { position: absolute; left: 15px; font-size: 20px; cursor: pointer; }
+        .alert-box { background-color: #ffeb3b; padding: 10px; font-size: 13px; font-weight: bold; text-align: center; color: #000; border-bottom: 2px solid #fbc02d; line-height: 1.5; }
+        
+        /* 快捷列 */
         .filter-bar { display: flex; background: white; padding: 10px; gap: 8px; position: sticky; top: 52px; z-index: 98; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .filter-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #209362; background: white; color: #209362; font-weight: bold; font-size: 14px; }
+        .filter-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #209362; background: white; color: #209362; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; }
         .filter-btn.active { background: #209362; color: white; }
+        
         .container { padding: 12px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #209362; margin: 10px 0 10px 5px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 卡片設計 */
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-top: 6px solid #209362; }
-        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; margin-bottom: 10px; background: #e8f5e9; color: #2e7d32; }
+        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; margin-bottom: 10px; background: #e8f5e9; color: #2e7d32; border: 1px solid #c3e6cb; }
+        .card h3 { margin: 0 0 10px 0; font-size: 20px; color: #209362; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .info-row { display: flex; margin-bottom: 6px; font-size: 14px; }
         .label { color: #7f8c8d; min-width: 90px; font-weight: bold; }
         .value { color: #2c3e50; flex: 1; font-weight: 500; }
-        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; }
-        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .phone-link { color: #209362; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #209362; }
+        
+        /* 輸入與按鈕 */
+        .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-top: 5px; box-sizing: border-box; background: #fff; }
+        .btn-report { width: 100%; background-color: #209362; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: 15px; cursor: pointer; }
         .btn-report:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         .btn-photo { width: 100%; background-color: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 10px; cursor: pointer; }
-        .done-card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #6c757d; display: flex; justify-content: space-between; align-items: center; }
-        #loading { text-align: center; padding: 30px; font-weight: bold; color: #7f8c8d; }
-    </style>
-</head>
-<body>
-    <div class="header"><span class="refresh-icon" onclick="fetchData()">🔄</span><span>🏥 健檢行動協調中心</span></div>
-    <div class="alert-box">🚨 務必帶手機、護照+居留證正本、健保卡<br>請提前 10 分鐘於接送位置等待</div>
-    <div class="filter-bar">
-        <div class="filter-btn active" id="btn-today" onclick="filterToday()">今日任務</div>
-        <div class="filter-btn" id="btn-all" onclick="filterAll()">全部任務</div>
-    </div>
-    <div class="container">
-        <div id="active-list"><div id="loading">載入資料中...</div></div>
-        <div style="font-weight:bold; color:#6c757d; margin: 25px 0 10px 5px;">✅ 近期已完成回報</div>
-        <div id="completed-list"></div>
-    </div>
+        
+        .btn-group-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-sub { padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-line { background-color: #06C755; color: white; }
+        .btn-map { background-color: #f1f3f4; color: #333; }
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzMf5u2CMRAOl8G51kzxDXcImcsdHC89sRMNO2xPfA_IJMxE8XbSAHG_13YrYivlYpf/exec'; // 這裡請貼上您的網址
-        let allData = [];
-        let photoDataMap = {}; 
-
-        async function fetchData() {
-            try {
-                document.getElementById('active-list').innerHTML = '<div id="loading">讀取最新 Excel 中... ⏳</div>';
-                const res = await fetch(`${API_URL}?t=${new Date().getTime()}`);
-                allData = await res.json();
-                filterToday();
-            } catch (e) { alert('連線失敗'); }
-        }
-
-        function renderUI(filterDate = null) {
-            const activeList = document.getElementById('active-list');
-            const completedList = document.getElementById('completed-list');
-            activeList.innerHTML = ''; completedList.innerHTML = '';
-
-            allData.forEach(item => {
-                const id = item['ID']; const name = item['移工姓名'];
-                if (item['狀態 (未完成/已完成)'] === '已完成') {
-                    const div = document.createElement('div');
-                    div.className = 'done-card';
-                    div.innerHTML = `<b>✅ ${name}</b><span style="font-size:12px; color:#888;">${item['最後回報者'] || ''}</span>`;
-                    completedList.appendChild(div);
-                } else {
-                    if (filterDate && !item['接送日及時間'].includes(filterDate)) return;
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div class="status-badge">ID：${id} | ${item['目前狀態'] || '待處理'}</div>
-                        <h3>👤 ${name}</h3>
-                        <div class="info-row"><div class="label">⏰ 接送時間</div><div class="value" style="color:red; font-weight:bold;">${item['接送日及時間']}</div></div>
-                        <div class="info-row"><div class="label">📍 接送地址</div><div class="value">${item['接送地址']}</div></div>
-                        <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-top:10px;">
-                            <input type="text" class="input-field" id="rep-${id}" placeholder="回報人姓名 (必填)">
-                            <select class="input-field" id="sel-${id}">
-                                <option value="">-- 更新目前進度 --</option>
-                                <option value="1.已通知(翻譯/業務)">1.已通知(翻譯/業務)</option>
-                                <option value="2.已聯絡司機">2.已聯絡司機</option>
-                                <option value="3.已上車">3.已上車</option>
-                                <option value="4.體檢中">4.體檢中</option>
-                                <option value="5.已完成">5.已完成</option>
-                            </select>
-                            
-                            <input type="file" id="file-${id}" accept="image/*" capture="camera" style="display:none;" onchange="compressImage('${id}')">
-                            <button type="button" class="btn-photo" onclick="document.getElementById('file-${id}').click()">📸 拍收據 / 現場照</button>
-                            <div id="pre-${id}" style="display:none; font-size:12px; color:#27ae60; text-align:center; font-weight:bold; margin-bottom:5px;">✅ 照片已就緒</div>
-
-                            <input type="text" class="input-field" id="rem-${id}" placeholder="詳細備註">
-                            <button class="btn-report" id="btn-${id}" onclick="doUpdate('${id}', '${name}')">確認送出回報</button>
-                        </div>
-                    `;
-                    activeList.appendChild(card);
-                }
-            });
-        }
-
-        function compressImage(id) {
-            const file = document.getElementById(`file-${id}`).files[0];
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const width = 1000; 
-                    const scaleFactor = width / img.width;
-                    canvas.width = width;
-                    canvas.height = img.height * scaleFactor;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    photoDataMap[id] = canvas.toDataURL('image/jpeg', 0.8); 
-                    document.getElementById(`pre-${id}`).style.display = 'block';
-                }
-            }
-        }
-
-        async function doUpdate(id, name) {
-            const reporter = document.getElementById(`rep-${id}`).value;
-            const status = document.getElementById(`sel-${id}`).value;
-            const remarks = document.getElementById(`rem-${id}`).value;
-            const photoData = photoDataMap[id] || null;
-
-            if(!reporter || !status) return alert('請填寫姓名並選擇進度！');
-            if(!confirm(`確認更新 ${name} 的進度嗎？`)) return;
-            
-            const btn = document.getElementById(`btn-${id}`);
-            btn.disabled = true; btn.innerText = '正在傳送照片與資料...';
-
-            try {
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify({ id, name, status, remarks, reporter, photoData }) 
-                });
-                setTimeout(() => { 
-                    alert('回報成功！'); 
-                    photoDataMap[id] = null; // 清空照片暫存
-                    fetchData(); 
-                }, 2000);
-            } catch (e) { 
-                alert('更新失敗'); 
-                btn.disabled = false; btn.innerText = '確認送出回報';
-            }
-        }
-
-        function filterToday() {
-            const now = new Date(); const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
-            document.getElementById('btn-today').classList.add('active'); document.getElementById('btn-all').classList.remove('active');
-            renderUI(today);
-        }
-        function filterAll() { 
-            document.getElementById('btn-all').classList.add('active'); document.getElementById('btn-today').classList.remove('active');
-            renderUI(null); 
-        }
-        fetchData();
-    </script>
-</body>
-</html>
+        /* 已完成清單 */
+        .done-card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #6c757d; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .done-time { font-size:
